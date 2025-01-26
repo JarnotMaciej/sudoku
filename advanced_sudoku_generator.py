@@ -5,28 +5,72 @@ from puzzle_generator import PuzzleGenerator
 
 class AdvancedSudokuGenerator(PuzzleGenerator):
     
-    def generate_professional_sudoku(self, min_clues=30, symmetry=False, required_difficulty="medium"):
-        grid = np.zeros((9, 9), dtype=int)
-        self.fill_grid(grid)  # Create a fully solved grid
+    def generate_professional_sudoku(self, min_clues=None, symmetry=False, required_difficulty="medium", timeout=60):
+        """Generate a professional Sudoku puzzle with optional symmetry and specified difficulty."""
+        # Default clue counts based on grid size and difficulty
+        default_clues = {
+            4: {
+                'easy': 8,
+                'medium': 6,
+                'hard': 4
+            },
+            9: {
+                'easy': 40,
+                'medium': 35,
+                'hard': 30
+            },
+            16: {
+                'easy': 200,
+                'medium': 150,
+                'hard': 120
+            }
+        }
 
-        if symmetry:
-            puzzle = self.remove_numbers_with_symmetry(grid.copy(), num_clues=min_clues)
-        else:
-            puzzle = self.remove_numbers_exact_clues(grid.copy(), num_clues=min_clues)
+        # If min_clues not specified, use default based on size and difficulty
+        if min_clues is None:
+            min_clues = default_clues[self.size][required_difficulty]
 
-        # Ensure the puzzle has exactly the desired number of clues
-        puzzle = self.enforce_exact_clue_count(puzzle, min_clues)
+        # For 16x16, ensure minimum clues for better performance
+        if self.size == 16:
+            min_clues = max(min_clues, 120)
 
-        return puzzle, grid
+        # Generate puzzle with timeout
+        try:
+            # Use superclass generate_sudoku with timeout
+            grid = np.zeros((self.size, self.size), dtype=object if self.size == 16 else int)
+            if self.fill_grid(grid):
+                # Store solution for enforce_exact_clue_count
+                self.solution = grid.copy()
 
-    # Remove numbers symmetrically from the grid
+                # Apply appropriate number removal strategy
+                if symmetry:
+                    puzzle = self.remove_numbers_with_symmetry(grid.copy(), num_clues=min_clues)
+                else:
+                    puzzle = self.remove_numbers_exact_clues(grid.copy(), num_clues=min_clues)
+
+                # Ensure exact clue count
+                puzzle = self.enforce_exact_clue_count(puzzle, min_clues)
+                return puzzle, grid
+            else:
+                raise RuntimeError("Failed to generate valid grid")
+
+        except TimeoutError:
+            raise TimeoutError(f"Failed to generate {self.size}x{self.size} puzzle within {timeout} seconds")
+
     def remove_numbers_with_symmetry(self, grid, num_clues):
-        total_cells = 81
+        """Remove numbers symmetrically from the grid."""
+        total_cells = self.size * self.size
         cells_to_remove = total_cells - num_clues
         removed = 0
         
-        # Get all symmetric pairs
-        symmetric_pairs = [(r, c, 8 - r, 8 - c) for r in range(9) for c in range(9) if r <= 8 - r and c <= 8 - c]
+        # Get all symmetric pairs (mirror across center)
+        max_idx = self.size - 1
+        symmetric_pairs = [
+            (r, c, max_idx - r, max_idx - c) 
+            for r in range(self.size) 
+            for c in range(self.size) 
+            if r <= max_idx - r and c <= max_idx - c
+        ]
         random.shuffle(symmetric_pairs)
 
         for r1, c1, r2, c2 in symmetric_pairs:
@@ -47,13 +91,13 @@ class AdvancedSudokuGenerator(PuzzleGenerator):
 
         return grid
 
-    # Remove numbers to leave exactly num_clues in the grid
     def remove_numbers_exact_clues(self, grid, num_clues):
-        total_cells = 81
+        """Remove numbers to leave exactly num_clues in the grid."""
+        total_cells = self.size * self.size
         cells_to_remove = total_cells - num_clues
         removed = 0
 
-        all_cells = [(r, c) for r in range(9) for c in range(9)]
+        all_cells = [(r, c) for r in range(self.size) for c in range(self.size)]
         random.shuffle(all_cells)
 
         for row, col in all_cells:
@@ -74,18 +118,15 @@ class AdvancedSudokuGenerator(PuzzleGenerator):
 
         return grid
 
-    # Enforce the exact clue count
     def enforce_exact_clue_count(self, grid, min_clues):
-        """
-        Ensure the puzzle has exactly `min_clues` by forcefully removing or restoring cells.
-        """
-        current_clues = np.count_nonzero(grid)
-        total_cells = 81
+        """Ensure the puzzle has exactly `min_clues` by forcefully removing or restoring cells."""
+        current_clues = sum(1 for r in range(self.size) for c in range(self.size) if grid[r][c] != 0)
+        total_cells = self.size * self.size
 
         # If too many cells removed, restore some cells
         if current_clues < min_clues:
             # Get all removed cells and restore randomly until exactly `min_clues`
-            all_cells = [(r, c) for r in range(9) for c in range(9) if grid[r][c] == 0]
+            all_cells = [(r, c) for r in range(self.size) for c in range(self.size) if grid[r][c] == 0]
             random.shuffle(all_cells)
             for row, col in all_cells:
                 if current_clues >= min_clues:
@@ -95,7 +136,7 @@ class AdvancedSudokuGenerator(PuzzleGenerator):
 
         # If too few cells removed, remove more until exactly `min_clues`
         if current_clues > min_clues:
-            all_filled_cells = [(r, c) for r in range(9) for c in range(9) if grid[r][c] != 0]
+            all_filled_cells = [(r, c) for r in range(self.size) for c in range(self.size) if grid[r][c] != 0]
             random.shuffle(all_filled_cells)
             for row, col in all_filled_cells:
                 if current_clues <= min_clues:

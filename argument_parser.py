@@ -15,6 +15,15 @@ Examples:
         self._add_arguments()
 
     def _add_arguments(self):
+        # Grid size selection
+        self.parser.add_argument(
+            '-size',
+            type=int,
+            choices=[4, 9, 16],
+            default=9,
+            help='Grid size (4 for 4x4, 9 for 9x9, 16 for 16x16). Default: 9'
+        )
+
         # Puzzle difficulty and number of puzzles in format "easy:20:40" (difficulty:count:clues)
         self.parser.add_argument(
             '-config', 
