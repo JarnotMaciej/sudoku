@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import time
 
 class PuzzleGenerator:
     def __init__(self, size=9):
@@ -40,14 +41,17 @@ class PuzzleGenerator:
                     return False
         return True
 
-    def fill_grid(self, grid):
+    def fill_grid(self, grid, start_time=None, timeout=None):
         """Fill the grid using size-appropriate strategy."""
         if self.size <= 9:
-            return self._fill_grid_small(grid)
-        return self._fill_grid_large(grid)
+            return self._fill_grid_small(grid, start_time, timeout)
+        return self._fill_grid_large(grid, start_time, timeout)
 
-    def _fill_grid_small(self, grid):
+    def _fill_grid_small(self, grid, start_time=None, timeout=None):
         """Original recursive backtracking for 4x4 and 9x9 grids."""
+        if timeout and start_time and time.time() - start_time > timeout:
+            raise TimeoutError(f"Grid filling timed out after {timeout} seconds")
+
         empty = self._find_empty(grid)
         if not empty:
             return True
@@ -56,13 +60,16 @@ class PuzzleGenerator:
         for symbol in random.sample(self.symbols, len(self.symbols)):
             if self.is_valid(grid, row, col, symbol):
                 grid[row][col] = symbol
-                if self._fill_grid_small(grid):
+                if self._fill_grid_small(grid, start_time, timeout):
                     return True
                 grid[row][col] = 0
         return False
 
-    def _fill_grid_large(self, grid):
+    def _fill_grid_large(self, grid, start_time=None, timeout=None):
         """Optimized filling for 16x16 grids using improved backtracking."""
+        if timeout and start_time and time.time() - start_time > timeout:
+            raise TimeoutError(f"Grid filling timed out after {timeout} seconds")
+
         empty = self._find_empty(grid)
         if not empty:
             return True
@@ -94,7 +101,7 @@ class PuzzleGenerator:
         # Try available values in random order
         for symbol in random.sample(available, len(available)):
             grid[row][col] = symbol
-            if self._fill_grid_large(grid):
+            if self._fill_grid_large(grid, start_time, timeout):
                 return True
             grid[row][col] = 0
         
@@ -119,23 +126,23 @@ class PuzzleGenerator:
 
     def count_solutions(self, grid, limit=2):
         """Count solutions up to limit. Returns early if more than one solution found."""
-        count = [0]
         empty = self._find_empty(grid)
         if not empty:
             return 1
-        
+
+        total = 0
         row, col = empty
         for symbol in self.symbols:
-            if count[0] >= limit:
+            if total >= limit:
                 break
             if self.is_valid(grid, row, col, symbol):
                 grid[row][col] = symbol
                 if not self._find_empty(grid):
-                    count[0] += 1
+                    total += 1
                 else:
-                    self.count_solutions(grid, limit)
+                    total += self.count_solutions(grid, limit - total)
                 grid[row][col] = 0
-        return count[0]
+        return total
 
     def has_unique_solution(self, grid):
         """Check if the puzzle has exactly one solution."""
@@ -143,7 +150,6 @@ class PuzzleGenerator:
 
     def generate_sudoku(self, min_clues=None, max_attempts=5, timeout=120):
         """Generate a full Sudoku grid with retries and timeout."""
-        import time
         start_time = time.time()
 
         if min_clues is None:
@@ -157,27 +163,39 @@ class PuzzleGenerator:
         if self.size == 16:
             min_clues = max(min_clues, 80)  # Ensure at least 80 clues for 16x16
 
+        # Validate clue count
+        if min_clues > self.size * self.size:
+            raise ValueError(f"Cannot generate puzzle with {min_clues} clues in a {self.size}x{self.size} grid")
+
         dtype = object if self.size == 16 else int
         grid = np.zeros((self.size, self.size), dtype=dtype)
+        attempt = 0
 
-        for attempt in range(max_attempts):
+        while attempt < max_attempts:
             if time.time() - start_time > timeout:
                 raise TimeoutError(f"Puzzle generation timed out after {timeout} seconds")
 
+            attempt += 1
             grid = np.zeros((self.size, self.size), dtype=dtype)
-            if self.fill_grid(grid):
+            
+            if self.fill_grid(grid, start_time, timeout):
                 try:
-                    puzzle = self.remove_numbers_exact_clues(grid.copy(), num_clues=min_clues)
+                    puzzle = self.remove_numbers_exact_clues(grid.copy(), num_clues=min_clues, start_time=start_time, timeout=timeout)
                     return puzzle, grid
                 except Exception as e:
-                    if attempt == max_attempts - 1:
+                    if isinstance(e, TimeoutError):
+                        raise
+                    if attempt == max_attempts:
                         raise RuntimeError(f"Failed to generate valid puzzle after {max_attempts} attempts")
                     continue
 
-        raise RuntimeError("Failed to generate valid grid")
+        raise RuntimeError(f"Failed to generate valid grid after {max_attempts} attempts")
 
-    def remove_numbers_exact_clues(self, grid, num_clues):
+    def remove_numbers_exact_clues(self, grid, num_clues, start_time=None, timeout=None):
         """Optimized number removal with batched uniqueness checks."""
+        if timeout and start_time and time.time() - start_time > timeout:
+            raise TimeoutError(f"Number removal timed out after {timeout} seconds")
+
         total_cells = self.size * self.size
         cells_to_remove = total_cells - num_clues
         removed = 0
@@ -190,6 +208,9 @@ class PuzzleGenerator:
             random.shuffle(all_cells)
             
             while removed < cells_to_remove and all_cells:
+                if timeout and start_time and time.time() - start_time > timeout:
+                    raise TimeoutError(f"Number removal timed out after {timeout} seconds")
+
                 batch = []
                 batch_cells = []
                 
@@ -224,6 +245,9 @@ class PuzzleGenerator:
             random.shuffle(all_cells)
 
             for row, col in all_cells:
+                if timeout and start_time and time.time() - start_time > timeout:
+                    raise TimeoutError(f"Number removal timed out after {timeout} seconds")
+
                 if removed >= cells_to_remove:
                     break
 

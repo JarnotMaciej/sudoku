@@ -34,28 +34,40 @@ class AdvancedSudokuGenerator(PuzzleGenerator):
         if self.size == 16:
             min_clues = max(min_clues, 120)
 
-        # Generate puzzle with timeout
-        try:
-            # Use superclass generate_sudoku with timeout
+        import time
+        start_time = time.time()
+        max_attempts = 5
+        attempt = 0
+        
+        grid = np.zeros((self.size, self.size), dtype=object if self.size == 16 else int)
+        while attempt < max_attempts:
+            if time.time() - start_time > timeout:
+                raise TimeoutError(f"Failed to generate {self.size}x{self.size} puzzle within {timeout} seconds")
+
+            attempt += 1
             grid = np.zeros((self.size, self.size), dtype=object if self.size == 16 else int)
+            
             if self.fill_grid(grid):
-                # Store solution for enforce_exact_clue_count
-                self.solution = grid.copy()
+                try:
+                    # Store solution for enforce_exact_clue_count
+                    self.solution = grid.copy()
 
-                # Apply appropriate number removal strategy
-                if symmetry:
-                    puzzle = self.remove_numbers_with_symmetry(grid.copy(), num_clues=min_clues)
-                else:
-                    puzzle = self.remove_numbers_exact_clues(grid.copy(), num_clues=min_clues)
+                    # Apply appropriate number removal strategy
+                    if symmetry:
+                        puzzle = self.remove_numbers_with_symmetry(grid.copy(), num_clues=min_clues)
+                    else:
+                        puzzle = self.remove_numbers_exact_clues(grid.copy(), num_clues=min_clues)
 
-                # Ensure exact clue count
-                puzzle = self.enforce_exact_clue_count(puzzle, min_clues)
-                return puzzle, grid
-            else:
-                raise RuntimeError("Failed to generate valid grid")
+                    # Ensure exact clue count while maintaining symmetry
+                    puzzle = self.enforce_exact_clue_count(puzzle, min_clues, symmetry)
+                    
+                    # Check if the puzzle is valid
+                    if min_clues <= self.size * self.size:
+                        return puzzle, grid
+                except Exception:
+                    continue
 
-        except TimeoutError:
-            raise TimeoutError(f"Failed to generate {self.size}x{self.size} puzzle within {timeout} seconds")
+        raise RuntimeError(f"Failed to generate valid puzzle after {max_attempts} attempts")
 
     def remove_numbers_with_symmetry(self, grid, num_clues):
         """Remove numbers symmetrically from the grid."""
@@ -118,30 +130,72 @@ class AdvancedSudokuGenerator(PuzzleGenerator):
 
         return grid
 
-    def enforce_exact_clue_count(self, grid, min_clues):
+    def enforce_exact_clue_count(self, grid, min_clues, symmetry=False):
         """Ensure the puzzle has exactly `min_clues` by forcefully removing or restoring cells."""
         current_clues = sum(1 for r in range(self.size) for c in range(self.size) if grid[r][c] != 0)
         total_cells = self.size * self.size
 
-        # If too many cells removed, restore some cells
-        if current_clues < min_clues:
-            # Get all removed cells and restore randomly until exactly `min_clues`
-            all_cells = [(r, c) for r in range(self.size) for c in range(self.size) if grid[r][c] == 0]
-            random.shuffle(all_cells)
-            for row, col in all_cells:
-                if current_clues >= min_clues:
-                    break
-                grid[row][col] = self.solution[row][col]  # Restore from the solution
-                current_clues += 1
+        max_idx = self.size - 1
 
-        # If too few cells removed, remove more until exactly `min_clues`
-        if current_clues > min_clues:
-            all_filled_cells = [(r, c) for r in range(self.size) for c in range(self.size) if grid[r][c] != 0]
-            random.shuffle(all_filled_cells)
-            for row, col in all_filled_cells:
-                if current_clues <= min_clues:
-                    break
-                grid[row][col] = 0  # Remove
-                current_clues -= 1
+        if symmetry:
+            # Handle symmetric restoration/removal
+            if current_clues < min_clues:
+                # Get all symmetric pairs of empty cells
+                empty_pairs = [
+                    (r1, c1, r2, c2) for r1 in range(self.size) for c1 in range(self.size)
+                    for r2, c2 in [(max_idx - r1, max_idx - c1)]
+                    if grid[r1][c1] == 0 and grid[r2][c2] == 0 and (r1 < r2 or (r1 == r2 and c1 <= c2))
+                ]
+                random.shuffle(empty_pairs)
+                
+                for r1, c1, r2, c2 in empty_pairs:
+                    if current_clues >= min_clues:
+                        break
+                    if r1 == r2 and c1 == c2:  # Center cell
+                        grid[r1][c1] = self.solution[r1][c1]
+                        current_clues += 1
+                    else:
+                        grid[r1][c1] = self.solution[r1][c1]
+                        grid[r2][c2] = self.solution[r2][c2]
+                        current_clues += 2
+
+            if current_clues > min_clues:
+                # Get all symmetric pairs of filled cells
+                filled_pairs = [
+                    (r1, c1, r2, c2) for r1 in range(self.size) for c1 in range(self.size)
+                    for r2, c2 in [(max_idx - r1, max_idx - c1)]
+                    if grid[r1][c1] != 0 and grid[r2][c2] != 0 and (r1 < r2 or (r1 == r2 and c1 <= c2))
+                ]
+                random.shuffle(filled_pairs)
+                
+                for r1, c1, r2, c2 in filled_pairs:
+                    if current_clues <= min_clues:
+                        break
+                    if r1 == r2 and c1 == c2:  # Center cell
+                        if current_clues - 1 >= min_clues:
+                            grid[r1][c1] = 0
+                            current_clues -= 1
+                    else:
+                        grid[r1][c1] = grid[r2][c2] = 0
+                        current_clues -= 2
+        else:
+            # Original non-symmetric logic
+            if current_clues < min_clues:
+                all_cells = [(r, c) for r in range(self.size) for c in range(self.size) if grid[r][c] == 0]
+                random.shuffle(all_cells)
+                for row, col in all_cells:
+                    if current_clues >= min_clues:
+                        break
+                    grid[row][col] = self.solution[row][col]
+                    current_clues += 1
+
+            if current_clues > min_clues:
+                all_filled_cells = [(r, c) for r in range(self.size) for c in range(self.size) if grid[r][c] != 0]
+                random.shuffle(all_filled_cells)
+                for row, col in all_filled_cells:
+                    if current_clues <= min_clues:
+                        break
+                    grid[row][col] = 0
+                    current_clues -= 1
 
         return grid
