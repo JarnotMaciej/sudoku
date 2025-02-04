@@ -2,4 +2,4 @@ venv/
 env/
 cline_docs/
 __pycache__/
-*.pdf
+/*.pdf
