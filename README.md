@@ -1,4 +1,4 @@
-# Advanced Sudoku Puzzle Generator
+# Sudoku Puzzle Generator
 
 ![Sample Puzzle](./samples/sample_puzzle.png)
 
