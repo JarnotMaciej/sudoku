@@ -2,6 +2,27 @@ import random
 import numpy as np
 import time
 
+def generate_puzzle(grid_size=9, difficulty='medium'):
+    """Generate a Sudoku puzzle with the specified grid size and difficulty.
+    
+    Args:
+        grid_size (int): Size of the grid (4, 9, or 16)
+        difficulty (str): Difficulty level ('easy', 'medium', 'hard')
+    
+    Returns:
+        tuple: (puzzle, solution) where both are numpy arrays
+    """
+    # Map difficulty to minimum clues
+    min_clues = {
+        'easy': {4: 8, 9: 40, 16: 170},
+        'medium': {4: 6, 9: 30, 16: 130},
+        'hard': {4: 4, 9: 17, 16: 80}
+    }[difficulty][grid_size]
+    
+    generator = PuzzleGenerator(grid_size)
+    puzzle, solution = generator.generate_sudoku(min_clues=min_clues)
+    return puzzle, solution
+
 class PuzzleGenerator:
     def __init__(self, size=9):
         """Initialize the puzzle generator with a given grid size.

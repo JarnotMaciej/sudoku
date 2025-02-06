@@ -1,0 +1,129 @@
+/* Import tokens */
+@import './tokens.css';
+
+/* Base Typography */
+h1, .h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  margin-bottom: var(--spacing-lg);
+}
+
+h2, .h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
+  margin-bottom: var(--spacing-md);
+}
+
+h3, .h3 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  margin-bottom: var(--spacing-sm);
+}
+
+p, .body {
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-md);
+}
+
+.small {
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+/* Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  text-decoration: none;
+  border: 2px solid transparent;
+}
+
+.button--primary {
+  background-color: var(--color-primary-black);
+  color: var(--color-primary-white);
+}
+
+.button--primary:hover {
+  background-color: #333;
+}
+
+.button--secondary {
+  background-color: var(--color-primary-white);
+  border-color: var(--color-primary-black);
+  color: var(--color-primary-black);
+}
+
+.button--secondary:hover {
+  background-color: var(--color-gray-100);
+}
+
+.button--text {
+  padding: var(--spacing-xs);
+  color: var(--color-primary-black);
+  background: transparent;
+}
+
+.button--text:hover {
+  color: var(--color-accent);
+}
+
+/* Cards */
+.card {
+  background-color: var(--color-primary-white);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Grid System */
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--spacing-md);
+}
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  
+  h1, .h1 {
+    font-size: calc(var(--font-size-h1) * 0.8);
+  }
+  
+  h2, .h2 {
+    font-size: calc(var(--font-size-h2) * 0.8);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+}

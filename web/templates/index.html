@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: var(--spacing-xl) 0;">
+    <!-- Hero Section -->
+    <header style="text-align: center; margin-bottom: var(--spacing-xl);">
+        <h1>Zudoku</h1>
+        <p style="font-size: var(--font-size-h3); margin-bottom: var(--spacing-md);">A Zen Sudoku Generator</p>
+    </header>
+
+    <!-- Generator Form -->
+    <div style="max-width: 42rem; margin: 0 auto;">
+        <div class="card" x-data="{ 
+            loading: false,
+            submitForm() {
+                this.loading = true;
+                const form = document.getElementById('generator-form');
+                form.submit();
+            }
+        }">
+            <h2 class="h2" style="margin-bottom: var(--spacing-md);">Generate Puzzles</h2>
+            
+            <form id="generator-form" action="{{ url_for('generate') }}" method="POST" style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                <!-- Grid Size -->
+                <div>
+                    <label for="grid_size" class="small" style="display: block; font-weight: var(--font-weight-medium); margin-bottom: var(--spacing-xs);">Grid Size</label>
+                    <select id="grid_size" name="grid_size" style="width: 100%; border: 1px solid var(--color-gray-200); border-radius: var(--border-radius-sm); padding: var(--spacing-xs);">
+                        <option value="4">4x4</option>
+                        <option value="9" selected>9x9</option>
+                        <option value="16">16x16</option>
+                    </select>
+                </div>
+
+                <!-- Difficulty -->
+                <div>
+                    <label for="difficulty" class="small" style="display: block; font-weight: var(--font-weight-medium); margin-bottom: var(--spacing-xs);">Difficulty</label>
+                    <select id="difficulty" name="difficulty" style="width: 100%; border: 1px solid var(--color-gray-200); border-radius: var(--border-radius-sm); padding: var(--spacing-xs);">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+
+                <!-- Number of Puzzles -->
+                <div>
+                    <label for="num_puzzles" class="small" style="display: block; font-weight: var(--font-weight-medium); margin-bottom: var(--spacing-xs);">Number of Puzzles</label>
+                    <input type="number" id="num_puzzles" name="num_puzzles" min="1" max="10" value="1" 
+                           style="width: 100%; border: 1px solid var(--color-gray-200); border-radius: var(--border-radius-sm); padding: var(--spacing-xs);">
+                </div>
+
+                <!-- Submit Button -->
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" 
+                            class="button button--primary"
+                            :style="loading ? 'opacity: 0.5; cursor: not-allowed;' : ''"
+                            :disabled="loading"
+                            @click.prevent="submitForm">
+                        <span x-show="!loading">Generate PDF</span>
+                        <span x-show="loading">
+                            Generating...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="grid" style="margin-top: var(--spacing-xxl);">
+        <div class="card" style="text-align: center;">
+            <h3 class="h3">Multiple Sizes</h3>
+            <p class="body">Choose between 4x4, 9x9, and 16x16 grids</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <h3 class="h3">Difficulty Levels</h3>
+            <p class="body">Generate puzzles in easy, medium, or hard difficulty</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <h3 class="h3">Bulk Generation</h3>
+            <p class="body">Create multiple puzzles in a single PDF</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('generator-form');
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            try {
+                const response = await fetch('{{ url_for("generate") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if (result.status === 'success') {
+                    // Handle success
+                    console.log('Success:', result);
+                } else {
+                    // Handle error
+                    console.error('Error:', result);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -3,3 +3,7 @@ env/
 cline_docs/
 __pycache__/
 /*.pdf
+
+# Node modules and build output
+node_modules/
+web/static/css/
