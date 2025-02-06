@@ -19,16 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const difficultyOptions = document.querySelectorAll('input[name="difficulty"]');
     difficultyOptions.forEach(radio => {
         radio.addEventListener('change', function() {
-            // Remove active state from all buttons
+            // Remove selected state from all buttons
             difficultyOptions.forEach(r => {
-                r.parentElement.querySelector('.btn').classList.remove('bg-black', 'text-white');
-                r.parentElement.querySelector('.btn').classList.add('bg-white', 'text-black');
+                r.parentElement.querySelector('.btn').classList.remove('selected');
             });
             
-            // Add active state to selected button
+            // Add selected state to checked button
             if (this.checked) {
-                this.parentElement.querySelector('.btn').classList.remove('bg-white', 'text-black');
-                this.parentElement.querySelector('.btn').classList.add('bg-black', 'text-white');
+                this.parentElement.querySelector('.btn').classList.add('selected');
             }
         });
     });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sudoku Generator{% endblock %}</title>
+    <title>{% block title %}Zudoku | Zen Sudoku{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
 </head>
 <body class="site-body">
@@ -11,7 +11,7 @@
     <header class="site-header">
         <nav class="site-container">
             <div class="nav-content">
-                <a href="/" class="nav-logo">Sudoku Generator</a>
+                <a href="/" class="nav-logo">Zudoku | Zen Sudoku</a>
             </div>
         </nav>
     </header>
@@ -54,8 +54,10 @@
                             <label for="grid_size" class="form-label">Grid Size</label>
                             <div class="select-wrapper">
                                 <select id="grid_size" name="grid_size" class="form-select">
-                                    <option value="9">9x9 (Classic)</option>
-                                </select>
+                    <option value="4">4x4 (Mini)</option>
+                    <option value="9" selected>9x9 (Classic)</option>
+                    <option value="16">16x16 (Super)</option>
+                </select>
                             </div>
                         </div>
 
@@ -76,8 +78,9 @@
         <section class="preview-section">
             <div class="site-container">
                 <div class="preview-container">
-                    <h2 class="heading-2">Professional PDF Output</h2>
-                    <p class="preview-text">Your puzzles will be delivered in a clean, printable format with solutions included</p>
+                    <h2 class="heading-2">reMarkable 2 Ready</h2>
+                    <p class="preview-text">Your puzzles are perfectly adjusted for the reMarkable 2 e-ink tablet</p>
+                    <p class="preview-text">Download the PDF and transfer it to your device</p>
                 </div>
             </div>
         </section>
@@ -88,7 +91,7 @@
     <footer class="site-footer">
         <div class="site-container">
             <div class="footer-content">
-                <p>&copy; {{ current_year }} Sudoku Generator. All rights reserved.</p>
+                <p>zudoku by <a href="https://jarnotmaciej.com" class="footer-link">jarnotmaciej</a> {{ current_year }}</p>
             </div>
         </div>
     </footer>

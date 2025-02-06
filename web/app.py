@@ -34,8 +34,9 @@ def generate():
         num_puzzles = min(int(request.form['num_puzzles']), 50)  # Limit to 50 puzzles max
         
         # Validate input
-        if grid_size != 9:  # Currently only supporting 9x9
-            raise ValueError("Only 9x9 grid size is supported")
+        valid_grid_sizes = [4, 9, 16]
+        if grid_size not in valid_grid_sizes:
+            raise ValueError("Grid size must be 4x4, 9x9, or 16x16")
         
         if difficulty not in ['easy', 'medium', 'hard']:
             raise ValueError("Invalid difficulty level")
