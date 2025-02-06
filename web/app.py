@@ -23,14 +23,25 @@ def inject_year():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('base.html')
 
 @app.route('/generate', methods=['POST'])
 def generate():
     try:
+        # Get form data
         grid_size = int(request.form['grid_size'])
         difficulty = request.form['difficulty']
-        num_puzzles = int(request.form['num_puzzles'])
+        num_puzzles = min(int(request.form['num_puzzles']), 50)  # Limit to 50 puzzles max
+        
+        # Validate input
+        if grid_size != 9:  # Currently only supporting 9x9
+            raise ValueError("Only 9x9 grid size is supported")
+        
+        if difficulty not in ['easy', 'medium', 'hard']:
+            raise ValueError("Invalid difficulty level")
+        
+        if num_puzzles < 1:
+            raise ValueError("Number of puzzles must be at least 1")
         
         # Generate puzzles
         puzzles = []
@@ -52,7 +63,7 @@ def generate():
         return send_file(
             pdf_path,
             as_attachment=True,
-            download_name=f'zudoku-{difficulty}-{timestamp}.pdf',
+            download_name=f'sudoku-{difficulty}-{timestamp}.pdf',
             mimetype='application/pdf'
         )
         

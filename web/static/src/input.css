@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+.site-body {
+    @apply text-black bg-white min-h-screen flex flex-col antialiased;
+    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Typography */
+.heading-1 {
+    @apply text-[64px] leading-[1.1] font-extralight tracking-[-0.02em] mb-6;
+}
+
+.heading-2 {
+    @apply text-3xl font-light tracking-[-0.01em] mb-4;
+}
+
+.text-body {
+    @apply text-lg font-light leading-relaxed text-[#484848];
+}
+
+/* Layout */
+.site-container {
+    @apply max-w-5xl mx-auto px-6;
+}
+
+.site-header {
+    @apply py-6 border-b border-[#EBEBEB];
+}
+
+.nav-content {
+    @apply flex justify-between items-center;
+}
+
+.nav-logo {
+    @apply text-xl font-light tracking-tight;
+}
+
+/* Hero Section */
+.hero-section {
+    @apply py-24 text-center;
+}
+
+/* Generator Form */
+.form-section {
+    @apply py-16 border-t border-[#EBEBEB];
+}
+
+.form-container {
+    @apply max-w-xl mx-auto;
+}
+
+.form-grid {
+    @apply space-y-12;
+}
+
+.form-group {
+    @apply space-y-2;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-[#484848];
+}
+
+.form-select {
+    @apply w-full px-4 py-3 border border-[#EBEBEB] rounded-none 
+    bg-transparent appearance-none text-lg font-light
+    focus:outline-none focus:border-black transition-colors;
+}
+
+.form-number {
+    @apply w-full px-4 py-3 border border-[#EBEBEB] rounded-none
+    bg-transparent appearance-none text-lg font-light
+    focus:outline-none focus:border-black transition-colors;
+}
+
+.difficulty-options {
+    @apply grid grid-cols-3 gap-3;
+}
+
+/* Buttons */
+.btn {
+    @apply inline-flex items-center justify-center text-center
+    px-8 py-3 border-2 text-base font-light tracking-wide
+    transition-colors duration-200;
+}
+
+.btn-primary {
+    @apply border-black bg-black text-white
+    hover:bg-white hover:text-black;
+}
+
+.btn-generator {
+    @apply w-full mt-12;
+}
+
+/* Footer */
+.site-footer {
+    @apply py-8 mt-auto border-t border-[#EBEBEB];
+}
+
+.footer-content {
+    @apply text-center text-sm text-[#484848] font-light;
+}
+
+/* Form Enhancements */
+.select-wrapper {
+    @apply relative;
+}
+
+.select-wrapper::after {
+    content: '';
+    @apply absolute right-4 top-1/2 -translate-y-1/2 
+    w-2 h-2 border-r-2 border-b-2 border-black 
+    transform rotate-45 pointer-events-none;
+}
+
+/* Preview Section */
+.preview-section {
+    @apply py-16 text-center border-t border-[#EBEBEB];
+}
+
+.preview-container {
+    @apply max-w-xl mx-auto space-y-8;
+}
+
+.preview-text {
+    @apply text-[#484848] text-sm font-light;
+}
+
+/* Custom number input */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
